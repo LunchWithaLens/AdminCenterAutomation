@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "name": "QueueItem",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "mcposts",
+      "connection": "brismitho365mcr93ec_STORAGE"
+    }
+  ]
+}
