@@ -67,7 +67,7 @@ ForEach($message in $messages.Value){
     $message.Title = $message.Title -replace '–', '-'       
     $task = @{}
     $task.Add('id', $message.Id)
-    $task.Add('title',$message.Id + ' - ' + $message.Title)
+    $task.Add('title',$message.Id + ' - ' + $message.Title + ' - ' + $message.AffectedWorkloadDisplayNames)
     $task.Add('categories', $message.ActionType + ', ' + $message.Classification + ', ' + $message.Category)
     $task.Add('dueDate', $message.ActionRequiredByDate)
     $task.Add('updated', $message.LastUpdatedTime)
@@ -84,26 +84,7 @@ ForEach($message in $messages.Value){
     $task.Add('assignee', $product.assignee)
 
     $outTask = (ConvertTo-Json $task)
-    
-    Write-Host $task
-    Write-Host $outTask
-    #Using best practice async via queue storage
-    # Needs rewrite for latest AzQueue stuff.
-    
-    #$storeAuthContext = New-AzureStorageContext -ConnectionString $env:brismitho365mcr93ec_STORAGE 
-    
-    #$outQueue = Get-AzureStorageQueue –Name 'mcposts' -Context $storeAuthContext
-    #if ($outQueue -eq $null) {
-    #    $outQueue = New-AzureStorageQueue –Name 'mcposts' -Context $storeAuthContext
-    #}
-    
-    # Create a new message using a constructor of the CloudQueueMessage class.
-    #$queueMessage = New-Object `
-    #        -TypeName Microsoft.WindowsAzure.Storage.Queue.CloudQueueMessage `
-    #        -ArgumentList (ConvertTo-Json $task)
-    
-    # Add a new message to the queue.
-    #$outQueue.CloudQueue.AddMessage($queueMessage)
+        
     Push-OutputBinding -Name outputQueueItem -Value $outTask
     }
     }
