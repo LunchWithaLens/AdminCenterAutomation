@@ -6,7 +6,7 @@ Write-Host "Number of keys is $($message.keys.count)"
 # $title = $messageCenterTask.title 
 
 # Write out the queue message and insertion time to the information log.
-Write-Host "PowerShell queue trigger function reading work item: $($message['description'])"
+Write-Host "PowerShell queue trigger function reading work item: $($message['title'])"
 # Write-Host "What is in in $in"
 Write-Host "Queue item insertion time: $($TriggerMetadata.InsertionTime)"
 
@@ -33,6 +33,9 @@ $headers = @{}
 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
 $headers.Add('Content-Type', "application/json")
 
+Write-Host "Get tasks Header is $headers"
+Write-Host "And content-type is $($headers['Content-Type'])"
+
 $uri = "https://graph.microsoft.com/v1.0/planner/plans/" + $messageCenterPlanId + "/tasks"
 
 $messageCenterPlanTasks = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -UseBasicParsing
@@ -40,15 +43,14 @@ $messageCenterPlanTasksContent = $messageCenterPlanTasks.Content | ConvertFrom-J
 $messageCenterPlanTasksValue = $messageCenterPlanTasksContent.value
 $messageCenterPlanTasksValue = $messageCenterPlanTasksValue | Sort-Object bucketId, orderHint
 
-Write-Host $messageCenterPlanTasksValue[0].id
+# Write-Host $messageCenterPlanTasksValue[0].id
 
-<# 
 #################################################
 # Check if the task already exists by bucketId
 #################################################
 $taskExists = $FALSE
 ForEach($existingTask in $messageCenterPlanTasksValue){
-    if(($existingTask.title -match $messageCenterTask.id) -and ($existingTask.bucketId -eq $messageCenterTask.bucketId)){
+    if(($existingTask.title -match $message['id']) -and ($existingTask.bucketId -eq $message['bucketId'])){
     $taskExists = $TRUE
     Break
 }
@@ -58,39 +60,39 @@ ForEach($existingTask in $messageCenterPlanTasksValue){
 # Adding the task
 if(!$taskExists){
     $setTask =@{}
-    If($messageCenterTask.dueDate){
+    If($message['dueDate']){
         #$setTask.Add("dueDateTime", ([DateTime]$messageCenterTask.dueDate))
-        $setTask.Add("dueDateTime", $messageCenterTask.dueDate)
+        $setTask.Add("dueDateTime", $message['dueDate'])
     }
     $setTask.Add("orderHint", " !")
-    $messageCenterTask.title = $messageCenterTask.title -replace "â€™", "'"
+    $message['title'] = $message['title'] -replace "â€™", "'"
     #$messageCenterTask.title = $messageCenterTask.title -replace "â€“", "-"
-    $setTask.Add("title", $messageCenterTask.title)
+    $setTask.Add("title", $message['title'])
     $setTask.Add("planId", $messageCenterPlanId)
 
     # Setting Applied Categories
 $appliedCategories = @{}
-if($messageCenterTask.categories -match 'Action'){
+if($message['categories'] -match 'Action'){
     $appliedCategories.Add("category1",$TRUE)
 }
 else{$appliedCategories.Add("category1",$FALSE)}
-if($messageCenterTask.categories -match 'Plan for Change'){
+if($message['categories'] -match 'Plan for Change'){
     $appliedCategories.Add("category2",$TRUE)
 }
 else{$appliedCategories.Add("category2",$FALSE)}
-if($messageCenterTask.categories -match 'Prevent or Fix Issues'){
+if($message['categories'] -match 'Prevent or Fix Issues'){
     $appliedCategories.Add("category3",$TRUE)
 }
 else{$appliedCategories.Add("category3",$FALSE)}
-if($messageCenterTask.categories -match 'Advisory'){
+if($message['categories'] -match 'Advisory'){
     $appliedCategories.Add("category4",$TRUE)
 }
 else{$appliedCategories.Add("category4",$FALSE)}
-if($messageCenterTask.categories -match 'Awareness'){
+if($message['categories'] -match 'Awareness'){
     $appliedCategories.Add("category5",$TRUE)
 }
 else{$appliedCategories.Add("category5",$FALSE)}
-if($messageCenterTask.categories -match 'Stay Informed'){
+if($message['categories'] -match 'Stay Informed'){
     $appliedCategories.Add("category6",$TRUE)
 }
 else{$appliedCategories.Add("category6",$FALSE)}
@@ -99,56 +101,72 @@ $setTask.Add("appliedCategories",$appliedCategories)
 
 # Set bucket and assignee
 
-$setTask.Add("bucketId", $messageCenterTask.bucketId)
+$setTask.Add("bucketId", $message['bucketId'])
 $assignmentType = @{}
 $assignmentType.Add("@odata.type","#microsoft.graph.plannerAssignment")
 $assignmentType.Add("orderHint"," !")
 $assignments = @{}
-$assignments.Add($messageCenterTask.assignee, $assignmentType)
+$assignments.Add($message['assignee'], $assignmentType)
 $setTask.Add("assignments", $assignments)
 
+Write-Host "setTask is of type $($setTask.GetType())"
 # Make new task call
 
-$Request = @" 
+$testing = $setTask | ConvertTo-Json
+
+$request = @" 
 $($setTask | ConvertTo-Json)
 "@
 
 $headers = @{}
 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
-$headers.Add('Content-Type', "application/json")
-$headers.Add('Content-length', + $Request.Length)
+# $headers.Add('Content-Type', "application/json")
+# $headers.Add('Content-length', + $testing.length)
 $headers.Add('Prefer', "return=representation")
+
+Write-Host "New task Header is $headers"
+Write-Host "And content-type is $($headers['Content-Type'])"
+Write-Host "setTask is $setTask"
+Write-Host "Request is $request"
+Write-Host "Request is of type $($request.GetType())"
+Write-Host "Request length is $($request.length) or maybe $($request['length'])"
+Write-Host "Or even maybe $($testing.length) "
+Write-Host $testing
+
  
-$newTask = Invoke-WebRequest -Uri "https://graph.microsoft.com/v1.0/planner/tasks" -Method Post -Body $Request -Headers $headers -UseBasicParsing
+$newTask = Invoke-WebRequest -Uri "https://graph.microsoft.com/v1.0/planner/tasks" -Method Post `
+-Body $request -Headers $headers -UseBasicParsing `
+-ContentType "application/json"
 $newTaskContent = $newTask.Content | ConvertFrom-Json
 $newTaskId = $newTaskContent.id
 
+Write-Host $newTaskId
 
 # Add task details
 # Pull any urls out of the description to add as attachments
 $myMatches = New-Object System.Collections.ArrayList
 $myMatches.clear()
-$messageCenterTask.description = $messageCenterTask.description -replace '&amp;', '&'
+$message['description'] = $message['description'] -replace '&amp;', '&'
 $regex = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
 # Find all matches in description and add to an array
-select-string -Input $messageCenterTask.description -Pattern $regex -AllMatches | % { $_.Matches } | % {     $myMatches.add($_.Value)}
+select-string -Input $message['description'] -Pattern $regex -AllMatches | % { $_.Matches } | % {     $myMatches.add($_.Value)}
 
 
 
 #Replacing some forbidden characters for odata properties
-$externalLink = $messageCenterTask.reference -replace '\.', '%2E'
+$externalLink = $message['reference'] -replace '\.', '%2E'
 $externalLink = $externalLink -replace ':', '%3A'
 $externalLink = $externalLink -replace '\#', '%23'
 $externalLink = $externalLink -replace '\@', '%40'
-$messageCenterTask.description = $messageCenterTask.description -replace '[\u201C\u201D]', '"'
+$message['description'] = $message['description'] -replace '[\u201C\u201D]', '"'
 #$messageCenterTask.description = $messageCenterTask.description -replace "[”]", '' 
-$messageCenterTask.description = $messageCenterTask.description -replace "â€œ", '"' 
-$messageCenterTask.description = $messageCenterTask.description -replace "â€™", "'"
-$messageCenterTask.description = $messageCenterTask.description -replace "â€", '"'
-Write-Output $messageCenterTask.description
+$message['description'] = $message['description'] -replace "â€œ", '"' 
+$message['description'] = $message['description'] -replace "â€™", "'"
+$message['description'] = $message['description'] -replace "â€", '"'
+Write-Output $message['description']
 $setTaskDetails = @{}
-$setTaskDetails.Add("description", $messageCenterTask.description)
-if(($messageCenterTask.reference) -or ($myMatches.Count -gt 0)){
+$setTaskDetails.Add("description", $message['description'])
+if(($message['reference']) -or ($myMatches.Count -gt 0)){
 $reference = @{}
 $reference.Add("@odata.type", "#microsoft.graph.plannerExternalReference")
 $reference.Add("alias", "Additional Information")
@@ -162,7 +180,7 @@ $myMatch = $myMatch -replace '\#', '%23'
 $myMatch = $myMatch -replace '\@', '%40'
 $references.Add($myMatch.trim(), $reference)
 }
-if($messageCenterTask.reference){
+if($message['reference']){
 $references.Add($externalLink.trim(), $reference)
 }
 $setTaskDetails.Add("references", $references)
@@ -176,18 +194,20 @@ $uri = "https://graph.microsoft.com/v1.0/planner/tasks/" + $newTaskId + "/detail
 $result = Invoke-WebRequest -Uri $uri -Method GET -Headers $headers -UseBasicParsing
 $freshEtagTaskContent = $result.Content | ConvertFrom-Json
  
-$Request = @"
+$request = @"
 $($setTaskDetails | ConvertTo-Json)
 "@
 
 $headers = @{}
 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
 $headers.Add('If-Match', $freshEtagTaskContent.'@odata.etag')
-$headers.Add('Content-Type', "application/json")
-$headers.Add('Content-length', + $Request.Length)
+#$headers.Add('Content-Type', "application/json")
+#$headers.Add('Content-length', + $request.Length)
 Write-Output $Request
 $uri = "https://graph.microsoft.com/v1.0/planner/tasks/" + $newTaskId + "/details"
 
-$result = Invoke-WebRequest -Uri $uri -Method PATCH -Body $Request -Headers $headers -UseBasicParsing
-} #>
+$result = Invoke-WebRequest -Uri $uri -Method PATCH `
+-Body $request -Headers $headers -UseBasicParsing `
+-ContentType "application/json"
+}
 Write-Output "PowerShell script processed queue message '$title'"
