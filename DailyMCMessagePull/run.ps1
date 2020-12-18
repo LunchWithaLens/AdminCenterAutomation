@@ -85,6 +85,8 @@ ForEach($message in $messages.Value){
 
     $outTask = (ConvertTo-Json $task)
     
+    Write-Host $task
+    Write-Host $outTask
     #Using best practice async via queue storage
     # Needs rewrite for latest AzQueue stuff.
     
