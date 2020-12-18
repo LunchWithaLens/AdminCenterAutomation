@@ -26,9 +26,6 @@ $headers = @{}
 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
 $headers.Add('Content-Type', "application/json")
 
-Write-Host "Get tasks Header is $headers"
-Write-Host "And content-type is $($headers['Content-Type'])"
-
 $uri = "https://graph.microsoft.com/v1.0/planner/plans/" + $messageCenterPlanId + "/tasks"
 
 $messageCenterPlanTasks = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -UseBasicParsing
@@ -173,7 +170,7 @@ $($setTaskDetails | ConvertTo-Json)
 $headers = @{}
 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
 $headers.Add('If-Match', $freshEtagTaskContent.'@odata.etag')
-Write-Output $Request
+
 $uri = "https://graph.microsoft.com/v1.0/planner/tasks/" + $newTaskId + "/details"
 
 $result = Invoke-WebRequest -Uri $uri -Method PATCH `
