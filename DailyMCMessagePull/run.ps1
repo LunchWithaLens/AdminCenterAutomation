@@ -84,6 +84,7 @@ ForEach($message in $messages.Value){
     $task.Add('assignee', $product.assignee)
 
     $outTask = (ConvertTo-Json $task)
+    Write-Host $outTask
         
     Push-OutputBinding -Name outputQueueItem -Value $outTask
     }
