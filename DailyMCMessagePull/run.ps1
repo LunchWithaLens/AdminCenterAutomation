@@ -87,14 +87,14 @@ ForEach($product in $products){
         
     # $outTask = (ConvertTo-Json $task)
     # Write-Host $outTask
-        
+            $tasks += $task
     # Push-OutputBinding -Name outputQueueItem -Value $outTask
             }
-            $tasks += $task
-        }
+            
+            }
         $channel = [PSCustomObject]@{
-            product = $product.product
-            tasks = $tasks
+                product = $product.product
+                tasks = $tasks
         }
         $outTask = (ConvertTo-Json $channel)
         Write-Host $outTask
