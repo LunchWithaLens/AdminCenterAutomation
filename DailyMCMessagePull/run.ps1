@@ -62,7 +62,7 @@ catch [System.Net.WebException] {
 $channel = [PSCustomObject]@{
 }
 
-$cutoff = (Get-Date).AddDays(-28)
+$cutoff = (Get-Date).AddDays(-14)
 
 ForEach($product in $products){
     #$channel = @{}
