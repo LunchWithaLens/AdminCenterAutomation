@@ -59,16 +59,20 @@ catch [System.Net.WebException] {
     Write-Warning "Exception was caught: $($_.Exception.Message)"
    
 }
+# When re-writing for MSAL I was hitting an exception getting throttled for too many auth calls
+# Probably there was a way to avoid it, but decided rather than spawning many function calls
+# I would bundle the messages by product as I should be able to create multiple tasks in 1 call efficiently.
+
 $channel = [PSCustomObject]@{
 }
 
+# As many old posts sit around for a while and the queue limit is 64K I trimmed this to 14 days
+# You could just keep 2 days as long as you were sure it ran each day.
 $cutoff = (Get-Date).AddDays(-14)
 
 ForEach($product in $products){
-    #$channel = @{}
     $tasks = @{
     }
-    # $channel.Add('product', $product.product)
     ForEach($message in $messages.Value){
         If([DateTime]$message.LastUpdatedTime -gt $cutoff){
             If($message.MessageType -eq 'MessageCenter'){
@@ -78,7 +82,7 @@ ForEach($product in $products){
                 $fullMessage = ''
                 ForEach($messagePart in $message.Messages){
                     $fullMessage += $messagePart.MessageText
-                }
+                    }
                 $task = [PSCustomObject]@{
                 id = $message.Id
                 title = $message.Id + ' - ' + $message.Title + ' - ' + $message.AffectedWorkloadDisplayNames
@@ -91,26 +95,21 @@ ForEach($product in $products){
                 product = $product.product
                 bucketId = $product.bucketId
                 assignee = $product.assignee
-            }
-        
-
-            $tasks.Add($message.id, $task)
-                       
-            }
-            
+                    }
+                $tasks.Add($message.id, $task)
+                }
             }
         }
-        
     }
     $channel = [PSCustomObject]@{
         product = $product.product
         tasks = $tasks
-    }
+        }
     If($channel.tasks.count -gt 0){
         Write-Host $channel
         $outTask = (ConvertTo-Json $channel)
         Push-OutputBinding -Name outputQueueItem -Value $outTask
         }
-        
+       
  }  
 
