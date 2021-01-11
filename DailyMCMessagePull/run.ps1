@@ -59,6 +59,10 @@ catch [System.Net.WebException] {
     Write-Warning "Exception was caught: $($_.Exception.Message)"
    
 }
+$channel = [PSCustomObject]@{
+}
+
+$cutoff = (Get-Date).AddDays(-28)
 
 ForEach($product in $products){
     #$channel = @{}
@@ -66,26 +70,27 @@ ForEach($product in $products){
     }
     # $channel.Add('product', $product.product)
     ForEach($message in $messages.Value){
-        If($message.MessageType -eq 'MessageCenter'){
-            If($message.Title -match $product.product){
-            $message.Title = $message.Title -replace '–', '-'       
+        If([DateTime]$message.LastUpdatedTime -gt $cutoff){
+            If($message.MessageType -eq 'MessageCenter'){
+                If($message.Title -match $product.product){
+                $message.Title = $message.Title -replace '–', '-'       
 
-            $fullMessage = ''
-            ForEach($messagePart in $message.Messages){
-                $fullMessage += $messagePart.MessageText
-            }
-            $task = [PSCustomObject]@{
-            id = $message.Id
-            title = $message.Id + ' - ' + $message.Title + ' - ' + $message.AffectedWorkloadDisplayNames
-            categories = $message.ActionType + ', ' + $message.Classification + ', ' + $message.Category
-            dueDate = $message.ActionRequiredByDate
-            updated = $message.LastUpdatedTime
-            afftectedWorkloadDisplayNames = $message.AffectedWorkloadDisplayNames
-            description = $fullMessage
-            reference = $message.ExternalLink
-            product = $product.product
-            bucketId = $product.bucketId
-            assignee = $product.assignee
+                $fullMessage = ''
+                ForEach($messagePart in $message.Messages){
+                    $fullMessage += $messagePart.MessageText
+                }
+                $task = [PSCustomObject]@{
+                id = $message.Id
+                title = $message.Id + ' - ' + $message.Title + ' - ' + $message.AffectedWorkloadDisplayNames
+                categories = $message.ActionType + ', ' + $message.Classification + ', ' + $message.Category
+                dueDate = $message.ActionRequiredByDate
+                updated = $message.LastUpdatedTime
+                afftectedWorkloadDisplayNames = $message.AffectedWorkloadDisplayNames
+                description = $fullMessage
+                reference = $message.ExternalLink
+                product = $product.product
+                bucketId = $product.bucketId
+                assignee = $product.assignee
             }
         
 
@@ -94,14 +99,18 @@ ForEach($product in $products){
             }
             
             }
+        }
         
     }
     $channel = [PSCustomObject]@{
         product = $product.product
         tasks = $tasks
     }
-    Write-Host $channel
-    $outTask = (ConvertTo-Json $channel)
+    If($channel.tasks.count -gt 0){
+        Write-Host $channel
+        $outTask = (ConvertTo-Json $channel)
         Push-OutputBinding -Name outputQueueItem -Value $outTask
+        }
+        
  }  
 
