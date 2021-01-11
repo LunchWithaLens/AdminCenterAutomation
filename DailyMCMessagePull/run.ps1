@@ -101,7 +101,7 @@ ForEach($product in $products){
         tasks = $tasks
     }
     Write-Host $channel
-    $outTask = (ConvertTo-Json $task)
+    $outTask = (ConvertTo-Json $channel)
         Push-OutputBinding -Name outputQueueItem -Value $outTask
  }  
 
