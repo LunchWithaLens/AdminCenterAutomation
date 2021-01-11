@@ -61,34 +61,36 @@ catch [System.Net.WebException] {
 }
 
 ForEach($product in $products){
-    $channel = @{}
-    $channel.Add('product', $product.product)
+    #$channel = @{}
+    $tasks = @{
+    }
+    # $channel.Add('product', $product.product)
     ForEach($message in $messages.Value){
         If($message.MessageType -eq 'MessageCenter'){
             If($message.Title -match $product.product){
             $message.Title = $message.Title -replace '–', '-'       
-            $task = @{}
-            $task.Add('id', $message.Id)
-            $task.Add('title',$message.Id + ' - ' + $message.Title + ' - ' + $message.AffectedWorkloadDisplayNames)
-            $task.Add('categories', $message.ActionType + ', ' + $message.Classification + ', ' + $message.Category)
-            $task.Add('dueDate', $message.ActionRequiredByDate)
-            $task.Add('updated', $message.LastUpdatedTime)
-            $task.Add('afftectedWorkloadDisplayNames', $message.AffectedWorkloadDisplayNames)
-    
+
             $fullMessage = ''
             ForEach($messagePart in $message.Messages){
                 $fullMessage += $messagePart.MessageText
             }
-            $task.Add('description', $fullMessage)
-            $task.Add('reference', $message.ExternalLink)
-            $task.Add('product', $product.product)
-            $task.Add('bucketId', $product.bucketId)
-            $task.Add('assignee', $product.assignee)
+            $task = [PSCustomObject]@{
+            id = $message.Id
+            title = $message.Id + ' - ' + $message.Title + ' - ' + $message.AffectedWorkloadDisplayNames
+            categories = $message.ActionType + ', ' + $message.Classification + ', ' + $message.Category
+            dueDate = $message.ActionRequiredByDate
+            updated = $message.LastUpdatedTime
+            afftectedWorkloadDisplayNames = $message.AffectedWorkloadDisplayNames
+            description = $fullMessage
+            reference = $message.ExternalLink
+            product = $product.product
+            bucketId = $product.bucketId
+            assignee = $product.assignee
+            }
         
-    # $outTask = (ConvertTo-Json $task)
-    # Write-Host $outTask
-            $tasks += $task
-    # Push-OutputBinding -Name outputQueueItem -Value $outTask
+
+            $tasks.Add($message.id, $task)
+                       
             }
             
             }
@@ -98,7 +100,8 @@ ForEach($product in $products){
         product = $product.product
         tasks = $tasks
     }
-$outTask = (ConvertTo-Json $channel)
-Write-Host $outTask
-$tasks = @{}
-    }
+    Write-Host $channel
+    $outTask = (ConvertTo-Json $task)
+        Push-OutputBinding -Name outputQueueItem -Value $outTask
+ }  
+
