@@ -34,22 +34,23 @@ $messageCenterPlanTasksValue = $messageCenterPlanTasksContent.value
 $messageCenterPlanTasksValue = $messageCenterPlanTasksValue | Sort-Object bucketId, orderHint
 
 #################################################
-# Get individual tasks from the product mesage
+# Get individual tasks from the product message
 #################################################
 
 $messageCenterTasks = $message
 
 $product = $messageCenterTasks.product
 Write-Host "Product is $($product)"
+Write-Host ($messageCenterTasks.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)
 ForEach($mcTask in ($messageCenterTasks.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)){
-    $message = $messageCenterTasks.tasks.$mcTask
-Write-Host "Message is $($message)"
+    $mcMessage = $messageCenterTasks.tasks.$mcTask
+Write-Host "Message is $($mcMessage)"
 #################################################
 # Check if the task already exists by bucketId
 #################################################
 $taskExists = $FALSE
 ForEach($existingTask in $messageCenterPlanTasksValue){
-    if(($existingTask.title -match $message.id) -and ($existingTask.bucketId -eq $message.bucketId)){
+    if(($existingTask.title -match $mcMessage.id) -and ($existingTask.bucketId -eq $mcMessage.bucketId)){
     $taskExists = $TRUE
     Break
 }
@@ -59,38 +60,38 @@ ForEach($existingTask in $messageCenterPlanTasksValue){
 # Adding the task
 if(!$taskExists){
     $setTask =@{}
-    If($message.dueDate){
-        $setTask.Add("dueDateTime", $message.dueDate)
+    If($mcMessage.dueDate){
+        $setTask.Add("dueDateTime", $mcMessage.dueDate)
     }
     $setTask.Add("orderHint", " !")
-    $message.title = $message.title -replace "â€™", "'"
-    $setTask.Add("title", $message.title)
+    $mcMessage.title = $mcMessage.title -replace "â€™", "'"
+    $setTask.Add("title", $mcMessage.title)
     $setTask.Add("planId", $messageCenterPlanId)
 
     # Setting Applied Categories
     # This will need to change/loop when more labels are supported (25)
 $appliedCategories = @{}
-if($message.categories -match 'Action'){
+if($mcMessage.categories -match 'Action'){
     $appliedCategories.Add("category1",$TRUE)
 }
 else{$appliedCategories.Add("category1",$FALSE)}
-if($message.categories -match 'Plan for Change'){
+if($mcMessage.categories -match 'Plan for Change'){
     $appliedCategories.Add("category2",$TRUE)
 }
 else{$appliedCategories.Add("category2",$FALSE)}
-if($message.categories -match 'Prevent or Fix Issues'){
+if($mcMessage.categories -match 'Prevent or Fix Issues'){
     $appliedCategories.Add("category3",$TRUE)
 }
 else{$appliedCategories.Add("category3",$FALSE)}
-if($message.categories -match 'Advisory'){
+if($mcMessage.categories -match 'Advisory'){
     $appliedCategories.Add("category4",$TRUE)
 }
 else{$appliedCategories.Add("category4",$FALSE)}
-if($message.categories -match 'Awareness'){
+if($mcMessage.categories -match 'Awareness'){
     $appliedCategories.Add("category5",$TRUE)
 }
 else{$appliedCategories.Add("category5",$FALSE)}
-if($message.categories -match 'Stay Informed'){
+if($mcMessage.categories -match 'Stay Informed'){
     $appliedCategories.Add("category6",$TRUE)
 }
 else{$appliedCategories.Add("category6",$FALSE)}
@@ -99,12 +100,12 @@ $setTask.Add("appliedCategories",$appliedCategories)
 
 # Set bucket and assignee
 
-$setTask.Add("bucketId", $message.bucketId)
+$setTask.Add("bucketId", $mcMessage.bucketId)
 $assignmentType = @{}
 $assignmentType.Add("@odata.type","#microsoft.graph.plannerAssignment")
 $assignmentType.Add("orderHint"," !")
 $assignments = @{}
-$assignments.Add($message.assignee, $assignmentType)
+$assignments.Add($mcMessage.assignee, $assignmentType)
 $setTask.Add("assignments", $assignments)
 
 # Make new task call
@@ -127,26 +128,26 @@ $newTaskId = $newTaskContent.id
 # Pull any urls out of the description to add as attachments
 $myMatches = New-Object System.Collections.ArrayList
 $myMatches.clear()
-$message.description = $message.description -replace '&amp;', '&'
+$mcMessage.description = $mcMessage.description -replace '&amp;', '&'
 $regex = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
 # Find all matches in description and add to an array
-select-string -Input $message.description -Pattern $regex -AllMatches | % { $_.Matches } | % {     $myMatches.add($_.Value)}
+select-string -Input $mcMessage.description -Pattern $regex -AllMatches | % { $_.Matches } | % {     $myMatches.add($_.Value)}
 
 
 
 #Replacing some forbidden characters for odata properties
-$externalLink = $message.reference -replace '\.', '%2E'
+$externalLink = $mcMessage.reference -replace '\.', '%2E'
 $externalLink = $externalLink -replace ':', '%3A'
 $externalLink = $externalLink -replace '\#', '%23'
 $externalLink = $externalLink -replace '\@', '%40'
-$message.description = $message.description -replace '[\u201C\u201D]', '"'
-$message.description = $message.description -replace "â€œ", '"' 
-$message.description = $message.description -replace "â€™", "'"
-$message.description = $message.description -replace "â€", '"'
+$mcMessage.description = $mcMessage.description -replace '[\u201C\u201D]', '"'
+$mcMessage.description = $mcMessage.description -replace "â€œ", '"' 
+$mcMessage.description = $mcMessage.description -replace "â€™", "'"
+$mcMessage.description = $mcMessage.description -replace "â€", '"'
 
 $setTaskDetails = @{}
-$setTaskDetails.Add("description", $message.description)
-if(($message.reference) -or ($myMatches.Count -gt 0)){
+$setTaskDetails.Add("description", $mcMessage.description)
+if(($mcMessage.reference) -or ($myMatches.Count -gt 0)){
 $reference = @{}
 $reference.Add("@odata.type", "#microsoft.graph.plannerExternalReference")
 $reference.Add("alias", "Additional Information")
@@ -160,7 +161,7 @@ $myMatch = $myMatch -replace '\#', '%23'
 $myMatch = $myMatch -replace '\@', '%40'
 $references.Add($myMatch.trim(), $reference)
 }
-if($message.reference){
+if($mcMessage.reference){
 $references.Add($externalLink.trim(), $reference)
 }
 $setTaskDetails.Add("references", $references)
