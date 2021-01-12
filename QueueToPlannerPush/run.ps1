@@ -1,8 +1,8 @@
 # Input bindings are passed in via param block.
-param([object] $message, $TriggerMetadata)
+param([object] $queueMessage, $TriggerMetadata)
 
 # Write out the queue message and insertion time to the information log.
-Write-Host "PowerShell queue trigger function reading work item: $($message['title'])"
+Write-Host "PowerShell queue trigger function reading work item: $($queueMessage)"
 # Write-Host "What is in in $in"
 Write-Host "Queue item insertion time: $($TriggerMetadata.InsertionTime)"
 
@@ -12,8 +12,8 @@ Import-Module "D:\home\site\wwwroot\MSAL\MSAL.PS.psd1"
 $PWord = ConvertTo-SecureString -String $env:aadPassword -AsPlainText -Force
 $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $env:aadUsername, $PWord
 
-$graphToken = Get-MsalToken -ClientId "5d310a05-d6f6-465b-8d46-9de192d8085c"  -AzureCloudInstance AzurePublic `
--TenantId "01ba1a71-c58f-48a6-bc02-5e697e4298e5" -Authority "https://login.microsoftonline.com/brismith.onmicrosoft.com" `
+$graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePublic `
+-TenantId $env:tenantId -Authority "https://login.microsoftonline.com/" + $env:aadTenent `
 -UserCredential $Credential
 
 $messageCenterPlanId = $env:messageCenterPlanId
@@ -34,11 +34,22 @@ $messageCenterPlanTasksValue = $messageCenterPlanTasksContent.value
 $messageCenterPlanTasksValue = $messageCenterPlanTasksValue | Sort-Object bucketId, orderHint
 
 #################################################
+# Get individual tasks from the product mesage
+#################################################
+
+$messageCenterTasks = $queueMessage.Result.AsString | ConvertFrom-Json
+
+$product = $messageCenterTasks.product
+Write-Host "Product is $($product)"
+ForEach($mcTask in ($messageCenterTasks.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)){
+    $message = $messageCenterTasks.tasks.$mcTask
+Write-Host "Message is $($message)"
+#################################################
 # Check if the task already exists by bucketId
 #################################################
 $taskExists = $FALSE
 ForEach($existingTask in $messageCenterPlanTasksValue){
-    if(($existingTask.title -match $message['id']) -and ($existingTask.bucketId -eq $message['bucketId'])){
+    if(($existingTask.title -match $message.id) -and ($existingTask.bucketId -eq $message.bucketId)){
     $taskExists = $TRUE
     Break
 }
@@ -48,38 +59,38 @@ ForEach($existingTask in $messageCenterPlanTasksValue){
 # Adding the task
 if(!$taskExists){
     $setTask =@{}
-    If($message['dueDate']){
-        $setTask.Add("dueDateTime", $message['dueDate'])
+    If($message.dueDate){
+        $setTask.Add("dueDateTime", $message.dueDate)
     }
     $setTask.Add("orderHint", " !")
-    $message['title'] = $message['title'] -replace "â€™", "'"
-    $setTask.Add("title", $message['title'])
+    $message.title = $message.title -replace "â€™", "'"
+    $setTask.Add("title", $message.title)
     $setTask.Add("planId", $messageCenterPlanId)
 
     # Setting Applied Categories
     # This will need to change/loop when more labels are supported (25)
 $appliedCategories = @{}
-if($message['categories'] -match 'Action'){
+if($message.categories -match 'Action'){
     $appliedCategories.Add("category1",$TRUE)
 }
 else{$appliedCategories.Add("category1",$FALSE)}
-if($message['categories'] -match 'Plan for Change'){
+if($message.categories -match 'Plan for Change'){
     $appliedCategories.Add("category2",$TRUE)
 }
 else{$appliedCategories.Add("category2",$FALSE)}
-if($message['categories'] -match 'Prevent or Fix Issues'){
+if($message.categories -match 'Prevent or Fix Issues'){
     $appliedCategories.Add("category3",$TRUE)
 }
 else{$appliedCategories.Add("category3",$FALSE)}
-if($message['categories'] -match 'Advisory'){
+if($message.categories -match 'Advisory'){
     $appliedCategories.Add("category4",$TRUE)
 }
 else{$appliedCategories.Add("category4",$FALSE)}
-if($message['categories'] -match 'Awareness'){
+if($message.categories -match 'Awareness'){
     $appliedCategories.Add("category5",$TRUE)
 }
 else{$appliedCategories.Add("category5",$FALSE)}
-if($message['categories'] -match 'Stay Informed'){
+if($message.categories -match 'Stay Informed'){
     $appliedCategories.Add("category6",$TRUE)
 }
 else{$appliedCategories.Add("category6",$FALSE)}
@@ -88,12 +99,12 @@ $setTask.Add("appliedCategories",$appliedCategories)
 
 # Set bucket and assignee
 
-$setTask.Add("bucketId", $message['bucketId'])
+$setTask.Add("bucketId", $message.bucketId)
 $assignmentType = @{}
 $assignmentType.Add("@odata.type","#microsoft.graph.plannerAssignment")
 $assignmentType.Add("orderHint"," !")
 $assignments = @{}
-$assignments.Add($message['assignee'], $assignmentType)
+$assignments.Add($message.assignee, $assignmentType)
 $setTask.Add("assignments", $assignments)
 
 # Make new task call
@@ -116,26 +127,26 @@ $newTaskId = $newTaskContent.id
 # Pull any urls out of the description to add as attachments
 $myMatches = New-Object System.Collections.ArrayList
 $myMatches.clear()
-$message['description'] = $message['description'] -replace '&amp;', '&'
+$message.description = $message.description -replace '&amp;', '&'
 $regex = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
 # Find all matches in description and add to an array
-select-string -Input $message['description'] -Pattern $regex -AllMatches | % { $_.Matches } | % {     $myMatches.add($_.Value)}
+select-string -Input $message.description -Pattern $regex -AllMatches | % { $_.Matches } | % {     $myMatches.add($_.Value)}
 
 
 
 #Replacing some forbidden characters for odata properties
-$externalLink = $message['reference'] -replace '\.', '%2E'
+$externalLink = $message.reference -replace '\.', '%2E'
 $externalLink = $externalLink -replace ':', '%3A'
 $externalLink = $externalLink -replace '\#', '%23'
 $externalLink = $externalLink -replace '\@', '%40'
-$message['description'] = $message['description'] -replace '[\u201C\u201D]', '"'
-$message['description'] = $message['description'] -replace "â€œ", '"' 
-$message['description'] = $message['description'] -replace "â€™", "'"
-$message['description'] = $message['description'] -replace "â€", '"'
+$message.description = $message.description -replace '[\u201C\u201D]', '"'
+$message.description = $message.description -replace "â€œ", '"' 
+$message.description = $message.description -replace "â€™", "'"
+$message.description = $message.description -replace "â€", '"'
 
 $setTaskDetails = @{}
-$setTaskDetails.Add("description", $message['description'])
-if(($message['reference']) -or ($myMatches.Count -gt 0)){
+$setTaskDetails.Add("description", $message.description)
+if(($message.reference) -or ($myMatches.Count -gt 0)){
 $reference = @{}
 $reference.Add("@odata.type", "#microsoft.graph.plannerExternalReference")
 $reference.Add("alias", "Additional Information")
@@ -149,7 +160,7 @@ $myMatch = $myMatch -replace '\#', '%23'
 $myMatch = $myMatch -replace '\@', '%40'
 $references.Add($myMatch.trim(), $reference)
 }
-if($message['reference']){
+if($message.reference){
 $references.Add($externalLink.trim(), $reference)
 }
 $setTaskDetails.Add("references", $references)
@@ -176,5 +187,7 @@ $uri = "https://graph.microsoft.com/v1.0/planner/tasks/" + $newTaskId + "/detail
 $result = Invoke-WebRequest -Uri $uri -Method PATCH `
 -Body $request -Headers $headers -UseBasicParsing `
 -ContentType "application/json"
-}
+
 Write-Output "PowerShell script processed queue message '$title'"
+}
+}
