@@ -41,7 +41,10 @@ $messageCenterTasks = $message
 
 $product = $messageCenterTasks.product
 Write-Host "Product is $($product)"
-Write-Host ($messageCenterTasks.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)
+$listOfMCs = ($messageCenterTasks.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)
+
+Write-Host "MCs are $($listOfMCs)"
+
 ForEach($mcTask in ($messageCenterTasks.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)){
     $mcMessage = $messageCenterTasks.tasks.$mcTask
 Write-Host "Message is $($mcMessage)"
