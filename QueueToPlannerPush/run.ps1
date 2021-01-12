@@ -1,8 +1,8 @@
 # Input bindings are passed in via param block.
-param([object] $queueMessage, $TriggerMetadata)
+param([object] $message, $TriggerMetadata)
 
 # Write out the queue message and insertion time to the information log.
-Write-Host "PowerShell queue trigger function reading work item: $($queueMessage)"
+Write-Host "PowerShell queue trigger function reading work item: $($message)"
 # Write-Host "What is in in $in"
 Write-Host "Queue item insertion time: $($TriggerMetadata.InsertionTime)"
 
@@ -37,7 +37,7 @@ $messageCenterPlanTasksValue = $messageCenterPlanTasksValue | Sort-Object bucket
 # Get individual tasks from the product mesage
 #################################################
 
-$messageCenterTasks = $queueMessage.Result.AsString | ConvertFrom-Json
+$messageCenterTasks = $message.Result.AsString | ConvertFrom-Json
 
 $product = $messageCenterTasks.product
 Write-Host "Product is $($product)"
