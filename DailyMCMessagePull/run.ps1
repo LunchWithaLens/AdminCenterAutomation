@@ -102,7 +102,8 @@ ForEach($product in $products){
         }
     }
     $channel = [PSCustomObject]@{
-        product = $product.product
+        # product = $product.product
+        # tasks = $tasks
         tasks = $tasks
         }
     If($channel.tasks.count -gt 0){
