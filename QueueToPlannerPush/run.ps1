@@ -13,7 +13,7 @@ $PWord = ConvertTo-SecureString -String $env:aadPassword -AsPlainText -Force
 $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $env:aadUsername, $PWord
 
 $graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePublic `
--TenantId $env:tenantId -Authority "https://login.microsoftonline.com/$env:aadTenent" `
+-TenantId $env:tenantId -Authority "https://login.microsoftonline.com/$env:aadTenant" `
 -UserCredential $Credential
 
 $messageCenterPlanId = $env:messageCenterPlanId
