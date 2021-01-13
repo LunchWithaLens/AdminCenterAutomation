@@ -3,9 +3,16 @@ param([object] $message, $TriggerMetadata)
 
 # Write out the queue message and insertion time to the information log.
 Write-Host "PowerShell queue trigger function reading work item: $($message.product)"
-Write-Host "PowerShell queue trigger function reading work item tasks: $($message.tasks)"
-$listOfMCs = ($message.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)
-Write-Host "MCs are $($listOfMCs)"
+Write-Host "PowerShell queue trigger function reading work item tasks: $($message.tasks.Keys)"
+Write-Host "PowerShell queue trigger function reading work item type: $($message.GetType())"
+$message.tasks | ForEach-Object {
+    $_.Keys
+    $_.Values | ForEach-Object { $_.title
+    Write-Host "inner loop?" }
+Write-Host "outerloop?" }
+
+
+
 # Write-Host "What is in in $in"
 Write-Host "Queue item insertion time: $($TriggerMetadata.InsertionTime)"
 
@@ -40,9 +47,10 @@ $messageCenterPlanTasksValue = $messageCenterPlanTasksValue | Sort-Object bucket
 # Get individual tasks from the product message
 #################################################
 
-$messageCenterTasks = $message
+# $messageCenterTasks = $message.tasks | ConvertTo-Json -Depth 3
+$messageCenterTasks = $message.tasks
 
-$product = $messageCenterTasks.product
+$product = $message.product
 Write-Host "Product is $($product)"
 
 ForEach($mcTask in ($messageCenterTasks.tasks | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)){

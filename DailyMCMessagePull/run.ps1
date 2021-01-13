@@ -102,10 +102,10 @@ ForEach($product in $products){
         }
     }
     $channel = [PSCustomObject]@{
-        # product = $product.product
-        # tasks = $tasks
+        product = $product.product
         tasks = $tasks
         }
+
     If($channel.tasks.count -gt 0){
         Write-Host $channel
         $outTask = (ConvertTo-Json $channel)
