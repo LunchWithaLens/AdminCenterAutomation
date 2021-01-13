@@ -131,9 +131,8 @@ $myMatches.clear()
 $_.description = $_.description -replace '&amp;', '&'
 $regex = 'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)'
 # Find all matches in description and add to an array
-select-string -Input $_.description -Pattern $regex -AllMatches | % { $_.Matches } | % {     $myMatches.add($_.Value)}
-
-
+select-string -Input $_.description -Pattern $regex -AllMatches | % { $_.Matches } | % {$myMatches.add($_.Value)}
+$myMatches = $MyMatches | Select-Object -Unique
 
 #Replacing some forbidden characters for odata properties
 $externalLink = $_.reference -replace '\.', '%2E'
@@ -163,6 +162,7 @@ $references.Add($myMatch.trim(), $reference)
 }
 if($_.reference){
 $references.Add($externalLink.trim(), $reference)
+$references = $references | Select-Object -Unique
 }
 $setTaskDetails.Add("references", $references)
 $setTaskDetails.Add("previewType", "reference")
@@ -189,10 +189,10 @@ $result = Invoke-WebRequest -Uri $uri -Method PATCH `
 -Body $request -Headers $headers -UseBasicParsing `
 -ContentType "application/json"
 
-Write-Output "PowerShell script processed queue message '$title'"
+Write-Output "PowerShell script processed queue message $($_.id)"
 
-Write-Host "inner loop?" }
+}
 # Next task
-Write-Host "outerloop?" }
+}
 }
 
