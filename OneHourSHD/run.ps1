@@ -79,17 +79,28 @@ ForEach($channel in $channels){
                 If($message.WorkloadDisplayName -match $channel.product){
                 # $message.Title = $message.Title -replace '–', '-'       
 
-                $fullMessage = ''
+                $fullMessage = '<at id=\"0\">$($channel.contactName)</at>'
                 ForEach($messagePart in $message.Messages){
                     $fullMessage += $messagePart.MessageText
                     }
                 $setBody = @{}
                 $setBody.Add("content", $fullMessage)
 
+                $user = @{}
+                $user.Add("displayName", $channel.contactName)
+                $user.Add("id", $channel.contactAad)
+                $user.Add("userIdentityType", "aadUser")
+
+                $mentions = @{}
+                $mentions.Add("id", 0)
+                $mentions.Add("mentionText", $channel.contactName)
+                $mentions.Add("mentioned", $user)
+                
                 $setPost = @{}
                 $setPost.Add("importance", "high")
                 $setPost.Add("subject", $message.Id + " " + $message.Status + " " + $channel.product + " " + $message.Title)    
                 $SetPost.Add("body",$setBody)
+                $setPost.Add("mentions",$mentions)
                 $request = @"
 $($setPost | ConvertTo-Json)
 "@
