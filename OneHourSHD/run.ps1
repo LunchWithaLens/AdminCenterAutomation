@@ -17,11 +17,12 @@ Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
 # Will update to Graph calls once the Comms API swaps over
 
 #Get the products we are interested in
-$products = Get-Content 'D:\home\site\wwwroot\DailyMCMessagePull\products.json' | Out-String | ConvertFrom-json
+$channels = Get-Content 'D:\home\site\wwwroot\OneHourSHD\teamChannels.json' | Out-String | ConvertFrom-json
 
 $tenantId = $env:tenantId
 $client_id = $env:clientId
 $client_secret = $env:secret
+
 
 # Construct URI for OAuth Token
 $uri = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
@@ -57,4 +58,57 @@ catch [System.Net.WebException] {
 
     Write-Warning "Exception was caught: $($_.Exception.Message)"
    
+}
+
+# MSAL.PS added to the function to support the MSAL libraries
+Import-Module "D:\home\site\wwwroot\MSAL\MSAL.PS.psd1"
+
+$PWord = ConvertTo-SecureString -String $env:aadPassword -AsPlainText -Force
+$Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $env:aadUsername, $PWord
+
+$graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePublic `
+-TenantId $env:tenantId -Authority "https://login.microsoftonline.com/$env:aadTenant" `
+-UserCredential $Credential
+
+$cutoff = (Get-Date).AddHours(-2)
+
+ForEach($channel in $channels){
+    ForEach($message in $messages.Value){
+        If([DateTime]$message.LastUpdatedTime -gt $cutoff){
+            If($message.MessageType -eq 'Incident'){
+                If($message.WorkloadDisplayName -match $channel.product){
+                # $message.Title = $message.Title -replace '–', '-'       
+
+                $fullMessage = ''
+                ForEach($messagePart in $message.Messages){
+                    $fullMessage += $messagePart.MessageText
+                    }
+                $setBody = @{}
+                $setBody.Add("content", $fullMessage)
+
+                $setPost = @{}
+                $setPost.Add("importance", "high")
+                $setPost.Add("subject", $message.Id + " " + $message.Status + " " + $channel.product + " " + $message.Title)    
+                $SetPost.Add("body",$setBody)
+                $request = @"
+$($setPost | ConvertTo-Json)
+"@
+                $teamId = $channel.teamId
+                $teamChannelId = $channel.teamChannelId
+                $headers = @{}
+                $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
+                # $headers.Add('If-Match', $freshEtagTaskContent.'@odata.etag')
+
+                $uri = "https://graph.microsoft.com/v1.0/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages"
+
+                $result = Invoke-WebRequest -Uri $uri -Method Post `
+                -Body $request -Headers $headers -UseBasicParsing `
+                -ContentType "application/json"
+                Write-Output "PowerShell script processed queue message " $message.id
+
+                
+                }
+            }
+        }
+    }
 }

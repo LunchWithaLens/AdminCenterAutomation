@@ -2,36 +2,51 @@
     {
       "product": "Microsoft 365 suite",
       "teamChannelId": "19:0adfca1bfdb34a1b8f318f3613a98402@thread.tacv2",
-      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c"
+      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c",
+      "contactName": "Adele Vance",
+      "contactAad": "f481e47b-04ed-4ccf-a339-31cd1c34091c"
+
     },
     {
       "product": "Project",
       "teamChannelId": "19:d5e7635ac4c947838ba439a1146139f3@thread.tacv2",
-      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c"
+      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c",
+      "contactName": "Adele Vance",
+      "contactAad": "f481e47b-04ed-4ccf-a339-31cd1c34091c"
     },
     {
       "product": "Planner",
       "teamChannelId": "19:d74f9c7295e34c3b9d9ec1dca4a99db6@thread.tacv2",
-      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c"
+      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c",
+      "contactName": "Brian Smith",
+      "contactAad": "52ab5038-1fc7-48bc-a092-9efb7577450c"
     },
     {
       "product": "SharePoint Online",
       "teamChannelId": "19:231d1b875e7f430dbbe0406c11767c94@thread.tacv2",
-      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c"
+      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c",
+      "contactName": "Adele Vance",
+      "contactAad": "f481e47b-04ed-4ccf-a339-31cd1c34091c"
     },
     {
       "product": "Microsoft Teams",
       "teamChannelId": "19:a4124514d14f4ecaa16e1d8c24f348e6@thread.tacv2",
-      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c"
+      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c",
+      "contactName": "Brian Smith",
+      "contactAad": "52ab5038-1fc7-48bc-a092-9efb7577450c"
     },
     {
       "product": "Exchange Online",
       "teamChannelId": "19:7c32abb1bbee458bb3862718737bfbbf@thread.tacv2",
-      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c"
+      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c",
+      "contactName": "Isaiah Langer",
+      "contactAad": "6987ca8c-8659-4176-b121-768ab763fe48"
     },
     {
       "product": "Dynamics 365",
       "teamChannelId": "19:5671772921ba4412a21a24b91edbea84@thread.tacv2",
-      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c"
+      "teamId": "452a9428-7dbe-4511-a211-13fffaa8bf7c",
+      "contactName": "Adele Vance",
+      "contactAad": "f481e47b-04ed-4ccf-a339-31cd1c34091c"
     }
 ]
