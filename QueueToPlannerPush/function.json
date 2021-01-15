@@ -5,7 +5,7 @@
       "type": "queueTrigger",
       "direction": "in",
       "queueName": "mcposts",
-      "connection": "brismitho365mcr93ec_STORAGE"
+      "connection": "storageName_STORAGE"
     }
   ]
 }
