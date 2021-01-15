@@ -79,22 +79,28 @@ ForEach($channel in $channels){
                 If($message.WorkloadDisplayName -match $channel.product){
                 # $message.Title = $message.Title -replace '–', '-'       
 
-                $fullMessage = '<at id=\"0\">$($channel.contactName)</at>'
+                $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
                 ForEach($messagePart in $message.Messages){
                     $fullMessage += $messagePart.MessageText
                     }
                 $setBody = @{}
+                $setBody.Add("contentType", "html")
                 $setBody.Add("content", $fullMessage)
 
-                $user = @{}
-                $user.Add("displayName", $channel.contactName)
-                $user.Add("id", $channel.contactAad)
-                $user.Add("userIdentityType", "aadUser")
+                $userDetail = @{}
+                $userDetail.Add("displayName", $channel.contactName)
+                $userDetail.Add("id", $channel.contactAad)
+                $userDetail.Add("userIdentityType", "aadUser")
 
-                $mentions = @{}
-                $mentions.Add("id", 0)
-                $mentions.Add("mentionText", $channel.contactName)
-                $mentions.Add("mentioned", $user)
+                $user = @{}
+                $user.Add("user", $userDetail)
+
+                $mentions = @()
+                $mentions += (@{
+                id = 0;
+                mentionText = $channel.contactName;
+                mentioned = $user;
+                })
                 
                 $setPost = @{}
                 $setPost.Add("importance", "high")
@@ -102,8 +108,10 @@ ForEach($channel in $channels){
                 $SetPost.Add("body",$setBody)
                 $setPost.Add("mentions",$mentions)
                 $request = @"
-$($setPost | ConvertTo-Json)
+$($setPost | ConvertTo-Json -Depth 4)
 "@
+                $request = $request.Replace("\\\", "\")
+                Write-Host $request
                 $teamId = $channel.teamId
                 $teamChannelId = $channel.teamChannelId
                 $headers = @{}
