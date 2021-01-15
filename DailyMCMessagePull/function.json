@@ -10,7 +10,7 @@
       "type": "queue",
       "name": "outputQueueItem",
       "queueName": "mcposts",
-      "connection": "storageName_STORAGE",
+      "connection": "brismitho365mcr93ec_STORAGE",
       "direction": "out"
     }
   ]

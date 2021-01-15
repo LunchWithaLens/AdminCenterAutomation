@@ -20,4 +20,4 @@ The $env variables needed which are not shared to Github are:
 "messageCenterPlanId": "The plan ID that the message center posts will land in",
 "tenantId": "the tenant GUID",
 "secret": "the secret for the app registration",
-"storageName_STORAGE": "the endpoint pointer for the queue"
+"brismitho365mcr93ec_STORAGE": "the endpoint pointer for the queue"
