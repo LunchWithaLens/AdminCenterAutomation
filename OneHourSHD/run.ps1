@@ -88,16 +88,21 @@ ForEach($channel in $channels){
     $existingMessagesContent = $existingMessages.Content | ConvertFrom-Json
     $existingMessagesConentValues = $existingMessagesContent.value
 
+    # Really just for debug use - check in the inner loop for reply or new
     ForEach($existingChannelMessages in $existingMessagesConentValues){
         Write-Host $existingChannelMessages.id
         Write-Host $existingChannelMessages.subject
     }
 
     ForEach($message in $messages.Value){
+        $reply = false
         If([DateTime]$message.LastUpdatedTime -gt $cutoff){
             If($message.MessageType -eq 'Incident'){
                 If($message.WorkloadDisplayName -match $channel.product){
-                # $message.Title = $message.Title -replace '–', '-'       
+                # ToDo 
+                # Check if incident number message.id already exists in subject
+                # If so set reply = true and get id of the message and reply
+
                 $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
                 ForEach($messagePart in $message.Messages){
                     $fullMessage += $messagePart.MessageText
