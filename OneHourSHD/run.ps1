@@ -78,8 +78,8 @@ ForEach($channel in $channels){
     $teamChannelId = $channel.teamChannelId
     $headers = @{}
     $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
-    
-    $uri = "https://graph.microsoft.com/v1.0/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages"
+    # It seems to only work without a 403 on the beta endpoint...
+    $uri = "https://graph.microsoft.com/beta/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages"
 
     $existingMessages = Invoke-WebRequest -Uri $uri -Method Get `
         -Headers $headers -UseBasicParsing `
