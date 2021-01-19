@@ -73,12 +73,31 @@ $graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePu
 $cutoff = (Get-Date).AddHours(-2)
 
 ForEach($channel in $channels){
+    # Get existing messages for the channel to see if we need to reply or create new
+    $teamId = $channel.teamId
+    $teamChannelId = $channel.teamChannelId
+    $headers = @{}
+    $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
+    
+    $uri = "https://graph.microsoft.com/v1.0/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages"
+
+    $existingMessages = Invoke-WebRequest -Uri $uri -Method Get `
+        -Headers $headers -UseBasicParsing `
+        -ContentType "application/json"
+
+    $existingMessagesContent = $existingMessages.Content | ConvertFrom-Json
+    $existingMessagesConentValues = $existingMessagesContent.value
+
+    ForEach($existingChannelMessages in $existingMessagesConentValues){
+        Write-Host $existingChannelMessages.id
+        Write-Host $existingChannelMessages.subject
+    }
+
     ForEach($message in $messages.Value){
         If([DateTime]$message.LastUpdatedTime -gt $cutoff){
             If($message.MessageType -eq 'Incident'){
                 If($message.WorkloadDisplayName -match $channel.product){
                 # $message.Title = $message.Title -replace '–', '-'       
-
                 $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
                 ForEach($messagePart in $message.Messages){
                     $fullMessage += $messagePart.MessageText
@@ -112,8 +131,8 @@ $($setPost | ConvertTo-Json -Depth 4)
 "@
                 $request = $request.Replace("\\\", "\")
                 Write-Host $request
-                $teamId = $channel.teamId
-                $teamChannelId = $channel.teamChannelId
+                # $teamId = $channel.teamId
+                # $teamChannelId = $channel.teamChannelId
                 $headers = @{}
                 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
                 # $headers.Add('If-Match', $freshEtagTaskContent.'@odata.etag')
