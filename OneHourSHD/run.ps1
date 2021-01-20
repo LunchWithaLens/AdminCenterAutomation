@@ -86,22 +86,21 @@ ForEach($channel in $channels){
         -ContentType "application/json"
 
     $existingMessagesContent = $existingMessages.Content | ConvertFrom-Json
-    $existingMessagesConentValues = $existingMessagesContent.value
+    $existingMessagesContentValues = $existingMessagesContent.value
 
     # Really just for debug use - check in the inner loop for reply or new
-    ForEach($existingChannelMessages in $existingMessagesConentValues){
+    ForEach($existingChannelMessages in $existingMessagesContentValues){
         Write-Host $existingChannelMessages.id
         Write-Host $existingChannelMessages.subject
     }
 
-    ForEach($message in $messages.Value){
-        $reply = false
+    :parentloop ForEach($message in $messages.Value){
+        $reply = $false
         If([DateTime]$message.LastUpdatedTime -gt $cutoff){
             If($message.MessageType -eq 'Incident'){
                 If($message.WorkloadDisplayName -match $channel.product){
-                # ToDo 
-                # Check if incident number message.id already exists in subject
-                # If so set reply = true and get id of the message and reply
+                    
+                    
 
                 $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
                 ForEach($messagePart in $message.Messages){
@@ -142,14 +141,32 @@ $($setPost | ConvertTo-Json -Depth 4)
                 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
                 # $headers.Add('If-Match', $freshEtagTaskContent.'@odata.etag')
 
-                $uri = "https://graph.microsoft.com/v1.0/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages"
+                ForEach($existingChannelMessages in $existingMessagesContentValues){
+                    Write-Host $existingChannelMessages.id
+                    Write-Host $existingChannelMessages.subject
+                    If($existingChannelMessages.subject){
+                        If($existingChannelMessages.subject.Contains($message.Id)){
+                        $reply = $true
+                        $uri = "https://graph.microsoft.com/beta/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages" + $message.Id + "/replies"
 
-                $result = Invoke-WebRequest -Uri $uri -Method Post `
-                -Body $request -Headers $headers -UseBasicParsing `
-                -ContentType "application/json"
-                Write-Output "PowerShell script processed queue message " $message.id
+                        $result = Invoke-WebRequest -Uri $uri -Method Post `
+                            -Body $request -Headers $headers -UseBasicParsing `
+                            -ContentType "application/json"
+                        Write-Output "PowerShell script processed queue message REPLY " $message.id
+                        break parentloop
+                    } else {
+                    $reply = $false
+                    $uri = "https://graph.microsoft.com/v1.0/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages/"
 
-                
+                    $result = Invoke-WebRequest -Uri $uri -Method Post `
+                        -Body $request -Headers $headers -UseBasicParsing `
+                        -ContentType "application/json"
+                        Write-Output "PowerShell script processed queue message NEW " $message.id
+                    }
+                    
+                }
+                }
+                             
                 }
             }
         }
