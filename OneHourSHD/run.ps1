@@ -89,10 +89,10 @@ ForEach($channel in $channels){
     $existingMessagesContentValues = $existingMessagesContent.value
 
     # Really just for debug use - check in the inner loop for reply or new
-    ForEach($existingChannelMessages in $existingMessagesContentValues){
-        Write-Host $existingChannelMessages.id
-        Write-Host $existingChannelMessages.subject
-    }
+    # ForEach($existingChannelMessages in $existingMessagesContentValues){
+    #    Write-Host $existingChannelMessages.id
+    #    Write-Host $existingChannelMessages.subject
+    # }
 
     :parentloop ForEach($message in $messages.Value){
         $reply = $false
@@ -134,7 +134,7 @@ ForEach($channel in $channels){
 $($setPost | ConvertTo-Json -Depth 4)
 "@
                 $request = $request.Replace("\\\", "\")
-                Write-Host $request
+                # Write-Host $request
                 # $teamId = $channel.teamId
                 # $teamChannelId = $channel.teamChannelId
                 $headers = @{}
@@ -142,8 +142,8 @@ $($setPost | ConvertTo-Json -Depth 4)
                 # $headers.Add('If-Match', $freshEtagTaskContent.'@odata.etag')
 
                 ForEach($existingChannelMessages in $existingMessagesContentValues){
-                    Write-Host $existingChannelMessages.id
-                    Write-Host $existingChannelMessages.subject
+                    # Write-Host $existingChannelMessages.id
+                    # Write-Host $existingChannelMessages.subject
                     If($existingChannelMessages.subject){
                         If($existingChannelMessages.subject.Contains($message.Id)){
                         $reply = $true
