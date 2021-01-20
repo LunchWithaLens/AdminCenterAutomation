@@ -70,7 +70,7 @@ $graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePu
 -TenantId $env:tenantId -Authority "https://login.microsoftonline.com/$env:aadTenant" `
 -UserCredential $Credential
 
-$cutoff = (Get-Date).AddHours(-2)
+$cutoff = (Get-Date).AddDays(-2)
 
 ForEach($channel in $channels){
     # Get existing messages for the channel to see if we need to reply or create new
