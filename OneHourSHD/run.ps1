@@ -146,9 +146,9 @@ ForEach($channel in $channels){
 $($setPost | ConvertTo-Json -Depth 4)
 "@
                         $request = $request.Replace("\\\", "\")
-                        Write-Host $request
+                        # Write-Host $request
                         $uri = "https://graph.microsoft.com/beta/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages/" + $existingChannelMessages.Id + "/replies"
-                        Write-Host $uri
+                        # Write-Host $uri
                         $result = Invoke-WebRequest -Uri $uri -Method Post `
                             -Body $request -Headers $headers -UseBasicParsing `
                             -ContentType "application/json"
