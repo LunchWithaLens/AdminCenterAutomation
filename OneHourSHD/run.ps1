@@ -70,7 +70,7 @@ $graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePu
 -TenantId $env:tenantId -Authority "https://login.microsoftonline.com/$env:aadTenant" `
 -UserCredential $Credential
 
-$cutoff = (Get-Date).AddDays(-2)
+$cutoff = (Get-Date).AddHours(-2)
 
 ForEach($channel in $channels){
     # Get existing messages for the channel to see if we need to reply or create new
@@ -120,7 +120,7 @@ ForEach($channel in $channels){
                             }
                         $setBody = @{}
                         $setBody.Add("contentType", "html")
-                        $setBody.Add("content", $fullMessage)
+                        $setBody.Add("content", $message.Id + " " + $message.Status + " " + $channel.product + " " + $message.Title + " " + $fullMessage)
         
                         $userDetail = @{}
                         $userDetail.Add("displayName", $channel.contactName)
@@ -140,15 +140,15 @@ ForEach($channel in $channels){
                         $setPost = @{}
                         # $setPost.Add("importance", "high")
                         # $setPost.Add("subject", $message.Id + " " + $message.Status + " " + $channel.product + " " + $message.Title)    
-                        $SetPost.Add("body",$message.Id + " " + $message.Status + " " + $channel.product + " " + $message.Title + " " + $setBody)
+                        $SetPost.Add("body", $setBody)
                         $setPost.Add("mentions",$mentions)
                         $request = @"
 $($setPost | ConvertTo-Json -Depth 4)
 "@
                         $request = $request.Replace("\\\", "\")
-
-                        $uri = "https://graph.microsoft.com/beta/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages/" + $message.Id + "/replies"
-
+                        Write-Host $request
+                        $uri = "https://graph.microsoft.com/beta/teams/" + $teamId + "/channels/" + $teamChannelId + "/messages/" + $existingChannelMessages.Id + "/replies"
+                        Write-Host $uri
                         $result = Invoke-WebRequest -Uri $uri -Method Post `
                             -Body $request -Headers $headers -UseBasicParsing `
                             -ContentType "application/json"
