@@ -95,7 +95,6 @@ ForEach($channel in $channels){
     # }
 
     :parentloop ForEach($message in $messages.Value){
-        $reply = $false
         If([DateTime]$message.LastUpdatedTime -gt $cutoff){
             If($message.MessageType -eq 'Incident'){
                 If($message.WorkloadDisplayName -match $channel.product){
@@ -113,7 +112,6 @@ ForEach($channel in $channels){
                     # Write-Host $existingChannelMessages.subject
                     If($existingChannelMessages.subject){
                         If($existingChannelMessages.subject.Contains($message.Id)){
-                        $reply = $true
                         $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
                         ForEach($messagePart in $message.Messages){
                             $fullMessage += $messagePart.MessageText
@@ -155,8 +153,7 @@ $($setPost | ConvertTo-Json -Depth 4)
                         Write-Output "PowerShell script processed queue message REPLY " $message.id
                         break parentloop
                     } else {
-                    $reply = $false
-
+                    
                     $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
                     ForEach($messagePart in $message.Messages){
                         $fullMessage += $messagePart.MessageText
