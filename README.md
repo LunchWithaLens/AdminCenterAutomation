@@ -1,4 +1,4 @@
-# New code to update MC to Planner integration
+# Update MC to Planner integration and new SHD to Teams
 
 ## Adding functions to also read SHD (Completed) and Roadmap (Still planned)
 ## Future plans to create Teams meetings with action items (tasks)
