@@ -1,6 +1,6 @@
-# Update MC to Planner integration and new SHD to Teams
+# Update M365 Message Center to Planner integration and new Service Health Dashboard to Teams
 
-## Adding functions to also read SHD (Completed) and Roadmap (Still planned)
+## Adding functions to also read Service Health Dashboard (Completed) and M365 Roadmap (Still planned)
 ## Future plans to create Teams meetings with action items (tasks)
 
 This takes the idea that is implemented in R-CSA325 and uses the latest MSAL libraries for authentication to Graph. [MSAL.PS PowerShell module](https://github.com/AzureAD/MSAL.PS/)
@@ -21,3 +21,5 @@ The $env variables needed which are not shared to Github are:
 "tenantId": "the tenant GUID",  
 "secret": "the secret for the app registration",  
 "brismitho365mcr93ec_STORAGE": "the endpoint pointer for the queue"  
+
+The Service Health Dashboard function also uses the same process and APIs, and writes to Teams channels as identified in a json file.
