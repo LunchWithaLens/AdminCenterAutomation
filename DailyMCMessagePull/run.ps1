@@ -22,8 +22,8 @@ Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
 $products = Get-Content 'D:\home\site\wwwroot\DailyMCMessagePull\products.json' | Out-String | ConvertFrom-json
 
 $tenantId = $env:tenantId
-$client_id = $env:clientId
-$client_secret = $env:secret
+# $client_id = $env:clientId
+# $client_secret = $env:secret
 
 # Commenting out the comms API code for now
 # Construct URI for OAuth Token
