@@ -97,24 +97,24 @@ ForEach($product in $products){
     $tasks = @{
     }
     ForEach($message in $messages.Value){
-        If([DateTime]$message.LastUpdatedTime -gt $cutoff){
+        If([DateTime]$message.lastModifiedDateTime -gt $cutoff){
             #If($message.MessageType -eq 'MessageCenter'){
-                If($message.Title -match $product.product){
-                $message.Title = $message.Title -replace '–', '-'       
+                If($message.title -match $product.product){
+                $message.title = $message.Title -replace '–', '-'       
 
                 $fullMessage = ''
-                ForEach($messagePart in $message.Messages){
-                    $fullMessage += $messagePart.MessageText
+                ForEach($messagePart in $message.body){
+                    $fullMessage += $messagePart.content
                     }
                 $task = [PSCustomObject]@{
-                id = $message.Id
-                title = $message.Id + ' - ' + $message.Title + ' - ' + $message.AffectedWorkloadDisplayNames
-                categories = $message.ActionType + ', ' + $message.Classification + ', ' + $message.Category
-                dueDate = $message.ActionRequiredByDate
-                updated = $message.LastUpdatedTime
-                afftectedWorkloadDisplayNames = $message.AffectedWorkloadDisplayNames
+                id = $message.id
+                title = $message.id + ' - ' + $message.title + ' - ' + $message.services
+                categories = $message.tags + ', ' + $message.classification + ', ' + $message.category
+                dueDate = $message.actionRequiredByDateTime
+                updated = $message.lastModifiedDateTime
+                afftectedWorkloadDisplayNames = $message.services
                 description = $fullMessage
-                reference = $message.ExternalLink
+                reference = $message.details.value
                 product = $product.product
                 bucketId = $product.bucketId
                 assignee = $product.assignee
