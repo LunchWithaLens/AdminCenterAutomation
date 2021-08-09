@@ -98,7 +98,7 @@ ForEach($product in $products){
     }
     ForEach($message in $messages.Value){
         If([DateTime]$message.LastUpdatedTime -gt $cutoff){
-            If($message.MessageType -eq 'MessageCenter'){
+            #If($message.MessageType -eq 'MessageCenter'){
                 If($message.Title -match $product.product){
                 $message.Title = $message.Title -replace '–', '-'       
 
@@ -121,7 +121,7 @@ ForEach($product in $products){
                     }
                 $tasks.Add($message.id, $task)
                 }
-            }
+            #}
         }
     }
     $channel = [PSCustomObject]@{
