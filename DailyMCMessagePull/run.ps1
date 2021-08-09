@@ -16,6 +16,7 @@ Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
 # BriSmith@Microsoft.com 
 # Code to read M365 Message Cnter posts for specific products then make a Function call with the resultant json
 # Will update to Graph calls once the Comms API swaps over
+# August 9th 2021 - starting conversion to Graph calls
 
 #Get the products we are interested in
 $products = Get-Content 'D:\home\site\wwwroot\DailyMCMessagePull\products.json' | Out-String | ConvertFrom-json
