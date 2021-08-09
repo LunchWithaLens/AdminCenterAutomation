@@ -25,41 +25,63 @@ $tenantId = $env:tenantId
 $client_id = $env:clientId
 $client_secret = $env:secret
 
+# Commenting out the comms API code for now
 # Construct URI for OAuth Token
-$uri = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
+# $uri = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
 
 # Construct Body for OAuth Token
-$body = @{
-    client_id     = $client_id
-    scope         = "https://manage.office.com/.default"
-    client_secret = $client_secret
-    grant_type    = "client_credentials"
-}
+# $body = @{
+#     client_id     = $client_id
+#     scope         = "https://manage.office.com/.default"
+#     client_secret = $client_secret
+#     grant_type    = "client_credentials"
+# }
 
 # Get OAuth 2.0 Token
-$tokenRequest = try {
+# $tokenRequest = try {
 
-    Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/x-www-form-urlencoded" -Body $body -ErrorAction Stop
+#     Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/x-www-form-urlencoded" -Body $body -ErrorAction Stop
 
-}
-catch [System.Net.WebException] {
+# }
+# catch [System.Net.WebException] {
 
-    Write-Warning "Exception was caught: $($_.Exception.Message)"
+#     Write-Warning "Exception was caught: $($_.Exception.Message)"
    
-}
+# }
 
-$token = $tokenRequest.access_token
+# $token = $tokenRequest.access_token
 
-$messages = try {
+# $messages = try {
 
-    Invoke-RestMethod -Method Get -Uri "https://manage.office.com/api/v1.0/$tenantid/ServiceComms/Messages" -ContentType "application/json" -Headers @{Authorization = "Bearer $token"} -ErrorAction Stop
+#     Invoke-RestMethod -Method Get -Uri "https://manage.office.com/api/v1.0/$tenantid/ServiceComms/Messages" -ContentType "application/json" -Headers @{Authorization = "Bearer $token"} -ErrorAction Stop
 
-}
-catch [System.Net.WebException] {
+# }
+# catch [System.Net.WebException] {
 
-    Write-Warning "Exception was caught: $($_.Exception.Message)"
+#     Write-Warning "Exception was caught: $($_.Exception.Message)"
    
-}
+# }
+
+# New code for Graph API calls to the Admin center
+
+# MSAL.PS added to the function to support the MSAL libraries
+Import-Module "D:\home\site\wwwroot\MSAL\MSAL.PS.psd1"
+
+$PWord = ConvertTo-SecureString -String $env:aadPassword -AsPlainText -Force
+$Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $env:aadUsername, $PWord
+
+$graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePublic `
+-TenantId $env:tenantId -Authority "https://login.microsoftonline.com/$env:aadTenant" `
+-UserCredential $Credential
+
+$headers = @{}
+$headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
+$headers.Add('Content-Type', "application/json")
+
+$uri = "https://graph.microsoft.com/v1.0/planner/admin/serviceAnnouncements/messages"
+
+$messages = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -UseBasicParsing
+
 # When re-writing for MSAL I was hitting an exception getting throttled for too many auth calls
 # Probably there was a way to avoid it, but decided rather than spawning many function calls
 # I would bundle the messages by product as I should be able to create multiple tasks in 1 call efficiently.
