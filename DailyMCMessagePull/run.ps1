@@ -91,7 +91,7 @@ $channel = [PSCustomObject]@{
 
 # As many old posts sit around for a while and the queue limit is 64K I trimmed this to 14 days
 # You could just keep 2 days as long as you were sure it ran each day.
-$cutoff = (Get-Date).AddDays(-2)
+$cutoff = (Get-Date).AddDays(-7)
 
 ForEach($product in $products){
     $tasks = @{
