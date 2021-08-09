@@ -78,7 +78,7 @@ $headers = @{}
 $headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
 $headers.Add('Content-Type', "application/json")
 
-$uri = "https://graph.microsoft.com/v1.0/planner/admin/serviceAnnouncements/messages"
+$uri = "https://graph.microsoft.com/v1.0/admin/serviceAnnouncements/messages"
 
 $messages = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -UseBasicParsing
 
