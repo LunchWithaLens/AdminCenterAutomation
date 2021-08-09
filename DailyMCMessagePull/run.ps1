@@ -96,7 +96,7 @@ $cutoff = (Get-Date).AddDays(-7)
 ForEach($product in $products){
     $tasks = @{
     }
-    ForEach($message in $messages.Value){
+    ForEach($message in $messages.value){
         If([DateTime]$message.lastModifiedDateTime -gt $cutoff){
             #If($message.MessageType -eq 'MessageCenter'){
                 If($message.title -match $product.product){
