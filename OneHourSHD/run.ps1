@@ -90,7 +90,7 @@ while($messagesContent.'@odata.nextLink' -ne $null){
     $messages+=$messagesContent.value
     }
 
-$cutoff = (Get-Date).AddHours(-9)
+$cutoff = (Get-Date).AddHours(-1)
 
 ForEach($channel in $channels){
     # Get existing messages for the channel to see if we need to reply or create new
