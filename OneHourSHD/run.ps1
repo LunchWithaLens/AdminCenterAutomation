@@ -20,45 +20,45 @@ Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
 $channels = Get-Content 'D:\home\site\wwwroot\OneHourSHD\teamChannels.json' | Out-String | ConvertFrom-json
 
 $tenantId = $env:tenantId
-$client_id = $env:clientId
-$client_secret = $env:secret
+# $client_id = $env:clientId
+# $client_secret = $env:secret
 
-
+# Switching over to the Graph API so commenting out the Comms API stuff.
 # Construct URI for OAuth Token
-$uri = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
+# $uri = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
 
 # Construct Body for OAuth Token
-$body = @{
-    client_id     = $client_id
-    scope         = "https://manage.office.com/.default"
-    client_secret = $client_secret
-    grant_type    = "client_credentials"
-}
+# $body = @{
+#     client_id     = $client_id
+#     scope         = "https://manage.office.com/.default"
+#     client_secret = $client_secret
+#     grant_type    = "client_credentials"
+# }
 
 # Get OAuth 2.0 Token
-$tokenRequest = try {
+# $tokenRequest = try {
 
-    Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/x-www-form-urlencoded" -Body $body -ErrorAction Stop
+#     Invoke-RestMethod -Method Post -Uri $uri -ContentType "application/x-www-form-urlencoded" -Body $body -ErrorAction Stop
 
-}
-catch [System.Net.WebException] {
+# }
+# catch [System.Net.WebException] {
 
-    Write-Warning "Exception was caught: $($_.Exception.Message)"
+#     Write-Warning "Exception was caught: $($_.Exception.Message)"
    
-}
+# }
 
-$token = $tokenRequest.access_token
+# $token = $tokenRequest.access_token
 
-$messages = try {
+# $messages = try {
 
-    Invoke-RestMethod -Method Get -Uri "https://manage.office.com/api/v1.0/$tenantid/ServiceComms/Messages" -ContentType "application/json" -Headers @{Authorization = "Bearer $token"} -ErrorAction Stop
+#     Invoke-RestMethod -Method Get -Uri "https://manage.office.com/api/v1.0/$tenantid/ServiceComms/Messages" -ContentType "application/json" -Headers @{Authorization = "Bearer $token"} -ErrorAction Stop
 
-}
-catch [System.Net.WebException] {
+# }
+# catch [System.Net.WebException] {
 
-    Write-Warning "Exception was caught: $($_.Exception.Message)"
+#     Write-Warning "Exception was caught: $($_.Exception.Message)"
    
-}
+# }
 
 # MSAL.PS added to the function to support the MSAL libraries
 Import-Module "D:\home\site\wwwroot\MSAL\MSAL.PS.psd1"
@@ -69,6 +69,26 @@ $Credential = New-Object -TypeName System.Management.Automation.PSCredential -Ar
 $graphToken = Get-MsalToken -ClientId $env:clientId  -AzureCloudInstance AzurePublic `
 -TenantId $env:tenantId -Authority "https://login.microsoftonline.com/$env:aadTenant" `
 -UserCredential $Credential
+
+# Adding Graph call for service incidents here
+
+$headers = @{}
+$headers.Add('Authorization','Bearer ' + $graphToken.AccessToken)
+$headers.Add('Content-Type', "application/json")
+
+$uri = "https://graph.microsoft.com/v1.0/admin/serviceAnnouncement/issues"
+
+$messages = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers
+$messagesContent = $messages.Content | ConvertFrom-Json
+
+$messages = @()
+$messages+=$messagesContent.value
+
+while($messagesContent.'@odata.nextLink' -ne $null){
+    $messageRequest = Invoke-RestMethod -Uri $messagesContent.'@odata.nextLink' -Method GET -Headers $headers
+    $messagesContent = $messageRequest
+    $messages+=$messagesContent.value
+    }
 
 $cutoff = (Get-Date).AddHours(-1)
 
@@ -94,10 +114,10 @@ ForEach($channel in $channels){
     #    Write-Host $existingChannelMessages.subject
     # }
 
-    :parentloop ForEach($message in $messages.Value){
-        If([DateTime]$message.LastUpdatedTime -gt $cutoff){
-            If($message.MessageType -eq 'Incident'){
-                If($message.WorkloadDisplayName -match $channel.product){
+    :parentloop ForEach($message in $messages){
+        If([DateTime]$message.LastModifiedDateTime -gt $cutoff){
+            #If($message.MessageType -eq 'Incident'){
+                If($message.service -match $channel.product){
                     
 
                 # Write-Host $request
@@ -111,14 +131,15 @@ ForEach($channel in $channels){
                     # Write-Host $existingChannelMessages.id
                     # Write-Host $existingChannelMessages.subject
                     If($existingChannelMessages.subject){
-                        If($existingChannelMessages.subject.Contains($message.Id)){
-                        $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
-                        ForEach($messagePart in $message.Messages){
-                            $fullMessage += $messagePart.MessageText
-                            }
+                        If($existingChannelMessages.subject.Contains($message.id)){
+                        $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - ' + $message.posts[$message.posts.Count-1].description.content
+                        # Just add the final post rather than all
+                        # ForEach($messagePart in $message.Messages){
+                        #    $fullMessage += $messagePart.MessageText
+                        #    }
                         $setBody = @{}
                         $setBody.Add("contentType", "html")
-                        $setBody.Add("content", $message.Id + " " + $message.Status + " " + $channel.product + " " + $message.Title + " " + $fullMessage)
+                        $setBody.Add("content", $message.id + " " + $message.status + " " + $channel.product + " " + $message.title + " " + $fullMessage)
         
                         $userDetail = @{}
                         $userDetail.Add("displayName", $channel.contactName)
@@ -154,10 +175,11 @@ $($setPost | ConvertTo-Json -Depth 4)
                         break parentloop
                     } else {
                     
-                    $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - '
-                    ForEach($messagePart in $message.Messages){
-                        $fullMessage += $messagePart.MessageText
-                        }
+                    $fullMessage = '<at id=\"0\">' + $channel.contactName + '</at> - ' + $message.posts[$message.posts.Count-1].description.content
+                    # Just add last post rather than all
+                    # ForEach($messagePart in $message.Messages){
+                    #     $fullMessage += $messagePart.MessageText
+                    #     }
                     $setBody = @{}
                     $setBody.Add("contentType", "html")
                     $setBody.Add("content", $fullMessage)
@@ -179,7 +201,7 @@ $($setPost | ConvertTo-Json -Depth 4)
                     
                     $setPost = @{}
                     $setPost.Add("importance", "high")
-                    $setPost.Add("subject", $message.Id + " " + $message.Status + " " + $channel.product + " " + $message.Title)    
+                    $setPost.Add("subject", $message.id + " " + $message.status + " " + $channel.product + " " + $message.title)    
                     $SetPost.Add("body",$setBody)
                     $setPost.Add("mentions",$mentions)
                     $request = @"
@@ -199,7 +221,7 @@ $($setPost | ConvertTo-Json -Depth 4)
                 }
                              
                 }
-            }
+            #}
         }
     }
 }
