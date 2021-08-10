@@ -86,7 +86,7 @@ $messagesContent = $messages.Content | ConvertFrom-Json
 $messages = @()
 $messages+=$messagesContent.value
 
-while($messagesContent.'@odata.nextLink' -ne $null){
+while($null -ne $messagesContent.'@odata.nextLink'){
     $messageRequest = Invoke-RestMethod -Uri $messagesContent.'@odata.nextLink' -Method GET -Headers $headers
     $messagesContent = $messageRequest
     $messages+=$messagesContent.value

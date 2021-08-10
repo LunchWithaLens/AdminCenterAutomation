@@ -84,7 +84,7 @@ $messagesContent = $messages.Content | ConvertFrom-Json
 $messages = @()
 $messages+=$messagesContent.value
 
-while($messagesContent.'@odata.nextLink' -ne $null){
+while($null -ne $messagesContent.'@odata.nextLink'){
     $messageRequest = Invoke-RestMethod -Uri $messagesContent.'@odata.nextLink' -Method GET -Headers $headers
     $messagesContent = $messageRequest
     $messages+=$messagesContent.value
@@ -171,7 +171,7 @@ $($setPost | ConvertTo-Json -Depth 4)
                         $result = Invoke-WebRequest -Uri $uri -Method Post `
                             -Body $request -Headers $headers -UseBasicParsing `
                             -ContentType "application/json"
-                        Write-Output "PowerShell script processed queue message REPLY " $message.id
+                        Write-Output "PowerShell script processed queue message REPLY " $message.id + $result
                         break parentloop
                     } else {
                     
