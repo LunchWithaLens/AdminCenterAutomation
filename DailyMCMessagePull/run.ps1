@@ -21,7 +21,7 @@ Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
 #Get the products we are interested in
 $products = Get-Content 'D:\home\site\wwwroot\DailyMCMessagePull\products.json' | Out-String | ConvertFrom-json
 
-$tenantId = $env:tenantId
+# $tenantId = $env:tenantId
 # $client_id = $env:clientId
 # $client_secret = $env:secret
 
@@ -81,6 +81,7 @@ $headers.Add('Content-Type', "application/json")
 $uri = "https://graph.microsoft.com/v1.0/admin/serviceAnnouncement/messages"
 
 $messages = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -UseBasicParsing
+$messagesContent = $messages.Content | ConvertFrom-Json
 
 # When re-writing for MSAL I was hitting an exception getting throttled for too many auth calls
 # Probably there was a way to avoid it, but decided rather than spawning many function calls
@@ -96,7 +97,7 @@ $cutoff = (Get-Date).AddDays(-7)
 ForEach($product in $products){
     $tasks = @{
     }
-    ForEach($message in $messages.value){
+    ForEach($message in $messagesContent.value){
         If([DateTime]$message.lastModifiedDateTime -gt $cutoff){
             #If($message.MessageType -eq 'MessageCenter'){
                 If($message.title -match $product.product){
