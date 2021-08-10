@@ -80,8 +80,17 @@ $headers.Add('Content-Type', "application/json")
 
 $uri = "https://graph.microsoft.com/v1.0/admin/serviceAnnouncement/messages"
 
-$messages = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -UseBasicParsing
+$messages = Invoke-WebRequest -Uri $uri -Method Get -Headers $headers
 $messagesContent = $messages.Content | ConvertFrom-Json
+
+$messages = @()
+$messages+=$messagesContent.value
+
+while($messagesContent.'@odata.nextLink' -ne $null){
+    $messageRequest = Invoke-RestMethod -Uri $messagesContent.'@odata.nextLink' -Method GET -Headers $headers
+    $messagesContent = $messageRequest
+    $messages+=$messagesContent.value
+    }
 
 # When re-writing for MSAL I was hitting an exception getting throttled for too many auth calls
 # Probably there was a way to avoid it, but decided rather than spawning many function calls
@@ -97,7 +106,7 @@ $cutoff = (Get-Date).AddDays(-7)
 ForEach($product in $products){
     $tasks = @{
     }
-    ForEach($message in $messagesContent.value){
+    ForEach($message in $messages){
         If([DateTime]$message.lastModifiedDateTime -gt $cutoff){
             #If($message.MessageType -eq 'MessageCenter'){
                 If($message.title -match $product.product){
