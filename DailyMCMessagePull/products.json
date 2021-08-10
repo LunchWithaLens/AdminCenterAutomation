@@ -18,25 +18,5 @@
       "product": "Windows",
       "bucketId": "skSBRABWJk2Wxod7boCK6mUAFmOR",
       "assignee": "ceaa49d3-5dd7-425d-b247-404ccc98e6f0"
-    },
-    {
-      "product": "Updated",
-      "bucketId": "XMIBr7xsKU2B9R1P3wgxf2UAMhfW",
-      "assignee": "a36d78c6-6cef-470e-9da6-a9151f57dda8"
-    },
-    {
-      "product": "New",
-      "bucketId": "GsBjdor0NkyQ9tpMGbmipmUAB5TE",
-      "assignee": "52ab5038-1fc7-48bc-a092-9efb7577450c"
-    },
-    {
-      "product": "SharePoint",
-      "bucketId": "qa9nq4AXHUakXz95Rkt1G2UACx4F",
-      "assignee": "31d8a155-747d-4b3d-b806-ad19d2dcd3ec"
-    },
-    {
-      "product": "Teams",
-      "bucketId": "BjugYIVMNEeiYAWPY9F16mUAABT-",
-      "assignee": "7792363a-f041-4a78-8a96-b7281fc29c27"
     }
 ]
