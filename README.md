@@ -3,7 +3,7 @@
 ## Adding functions to also read Service Health Dashboard (Completed) and M365 Roadmap (Still planned)
 ## Future plans to create Teams meetings with action items (tasks)
 
-## Currently broken as I migrate from Comms API to Graph - the returned message changed quite a bit...
+## The MC pull now uses Graph - might eb some bits still broken - need to fully test.
 
 This takes the idea that is implemented in R-CSA325 and uses the latest MSAL libraries for authentication to Graph. [MSAL.PS PowerShell module](https://github.com/AzureAD/MSAL.PS/)
 I will be switching to also uses the AffectedWorkloadDisplayName field to get the products as this is now reliable
