@@ -112,10 +112,11 @@ ForEach($product in $products){
                 If($message.title -match $product.product){
                 $message.title = $message.Title -replace '–', '-'       
 
-                $fullMessage = ''
-                ForEach($messagePart in $message.body){
-                    $fullMessage += $messagePart.content
-                    }
+                #$fullMessage = ''
+                #ForEach($messagePart in $message.body){
+                #    $fullMessage += $messagePart.content
+                #    }
+                
                 $task = [PSCustomObject]@{
                 id = $message.id
                 title = $message.id + ' - ' + $message.title + ' - ' + $message.services
@@ -123,7 +124,7 @@ ForEach($product in $products){
                 dueDate = $message.actionRequiredByDateTime
                 updated = $message.lastModifiedDateTime
                 afftectedWorkloadDisplayNames = $message.services
-                description = $fullMessage
+                description = $message.body.content
                 reference = $message.details.value
                 product = $product.product
                 bucketId = $product.bucketId
