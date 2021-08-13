@@ -167,7 +167,7 @@ $references = $references | Select-Object -Unique
 $setTaskDetails.Add("references", $references)
 $setTaskDetails.Add("previewType", "reference")
 }
-Start-Sleep -s 6
+Start-Sleep -s 3
 #Get Current Etag for task details
 
 $uri = "https://graph.microsoft.com/v1.0/planner/tasks/" + $newTaskId + "/details"
