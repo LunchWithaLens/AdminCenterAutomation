@@ -116,6 +116,16 @@ ForEach($product in $products){
                 #ForEach($messagePart in $message.body){
                 #    $fullMessage += $messagePart.content
                 #    }
+
+                # Found a bug now that RoadMapIds are added as references - this just gets the link
+                # Later I may add the Url to get the Roadmap page and item
+                If($message.details.Count -gt 0){
+                    ForEach($detail in $message.details){
+                        If($detail.name -eq "ExternalLink"){
+                            $ref = $detail.value
+                            }
+                    }
+                }
                 
                 $task = [PSCustomObject]@{
                 id = $message.id
@@ -125,7 +135,7 @@ ForEach($product in $products){
                 updated = $message.lastModifiedDateTime
                 afftectedWorkloadDisplayNames = $message.services
                 description = $message.body.content
-                reference = $message.details.value
+                reference = $ref
                 product = $product.product
                 bucketId = $product.bucketId
                 assignee = $product.assignee
