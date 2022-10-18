@@ -16,7 +16,7 @@ The $env variables needed which are not shared to Github are:
 "FUNCTIONS_WORKER_RUNTIME_VERSION": "~7",  
 "FUNCTIONS_WORKER_RUNTIME": "powershell",  
 "aadUsername": "exactly what it says",  
-"aadPassword": "this isn't may password - honestly",  
+"aadPassword": "this isn't my password - honestly",  
 "aadTenant": "the full .onmicrosoft tenant",  
 "clientId": "the client id configured in AAD app registration",  
 "messageCenterPlanId": "The plan ID that the message center posts will land in",  
@@ -24,4 +24,6 @@ The $env variables needed which are not shared to Github are:
 "secret": "the secret for the app registration",  
 "brismitho365mcr93ec_STORAGE": "the endpoint pointer for the queue"  
 
-The Service Health Dashboard function also uses the same process and APIs, and writes to Teams channels as identified in a json file.
+The Service Health Dashboard function also uses the same process and APIs, and writes to Teams channels as identified in a json file.  I may have a bug here - at times I've seen the same post multiple times.
+
+ToDo: Add pull of Roadmap RSS feed and post to a SharePoint list
