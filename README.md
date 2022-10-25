@@ -1,9 +1,10 @@
 # Update M365 Message Center to Planner integration and new Service Health Dashboard to Teams
 
 ## Adding functions to also read Service Health Dashboard (Completed) and M365 Roadmap (Still planned)
+
 ## Future plans to create Teams meetings with action items (tasks)
 
-## The MC pull now uses Graph - might be some bits still broken - need to fully test.
+## The MC pull now uses Graph - might be some bits still broken - need to fully test
 
 This takes the idea that is implemented in R-CSA325 and uses the latest MSAL libraries for authentication to Graph. [MSAL.PS PowerShell module](https://github.com/AzureAD/MSAL.PS/)
 I will be switching to also uses the AffectedWorkloadDisplayName field to get the products as this is now reliable
