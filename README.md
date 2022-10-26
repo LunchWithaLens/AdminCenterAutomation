@@ -27,4 +27,6 @@ The $env variables needed which are not shared to Github are:
 
 The Service Health Dashboard function also uses the same process and APIs, and writes to Teams channels as identified in a json file.  I may have a bug here - at times I've seen the same post multiple times.
 
+Updated to Azure Functions project runtime ~4 and Azure Function Extensions 2.6.1+ to ensure continued support
+
 ToDo: Add pull of Roadmap RSS feed and post to a SharePoint list
